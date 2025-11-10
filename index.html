@@ -1,0 +1,982 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Stroven CODE</title>
+    <style>
+        :root {
+            --primary: #00ffff;
+            --secondary: #ff00ff;
+            --bg-dark: #0d1117;
+            --bg-light: #161b22;
+            --text: #e6edf3;
+            --text-light: #8b949e;
+            --border: #30363d;
+            --success: #00ff88;
+            --danger: #ff4444;
+        }
+
+        [data-theme="light"] {
+            --bg-dark: #ffffff;
+            --bg-light: #f6f8fa;
+            --text: #1f2328;
+            --text-light: #656d76;
+            --border: #d0d7de;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            touch-action: manipulation;
+        }
+
+        body {
+            font-family: 'Segoe UI', system-ui, sans-serif;
+            background-color: var(--bg-dark);
+            color: var(--text);
+            line-height: 1.5;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        .container {
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+        }
+
+        /* Header */
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 16px;
+            background-color: var(--bg-light);
+            border-bottom: 1px solid var(--border);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .logo {
+            font-weight: 700;
+            font-size: 1.2rem;
+            background: linear-gradient(90deg, var(--primary), var(--secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        /* Editor Layout */
+        .editor-container {
+            display: flex;
+            flex-direction: column;
+            flex: 1;
+            overflow: hidden;
+        }
+
+        .editor-tabs {
+            display: flex;
+            background-color: var(--bg-light);
+            border-bottom: 1px solid var(--border);
+            overflow-x: auto;
+        }
+
+        .editor-tab {
+            padding: 10px 16px;
+            background: none;
+            border: none;
+            color: var(--text-light);
+            cursor: pointer;
+            border-bottom: 2px solid transparent;
+            transition: all 0.2s;
+            white-space: nowrap;
+            flex-shrink: 0;
+        }
+
+        .editor-tab.active {
+            color: var(--text);
+            border-bottom-color: var(--primary);
+        }
+
+        .editor-panes {
+            display: flex;
+            flex: 1;
+            overflow: hidden;
+        }
+
+        .editor-pane {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .editor-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 12px;
+            background-color: var(--bg-light);
+            border-bottom: 1px solid var(--border);
+            font-size: 0.9rem;
+            font-weight: 500;
+        }
+
+        .editor-content {
+            flex: 1;
+            overflow: auto;
+        }
+
+        .code-editor {
+            width: 100%;
+            height: 100%;
+            padding: 12px;
+            background-color: var(--bg-dark);
+            color: var(--text);
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            border: none;
+            resize: none;
+            outline: none;
+            line-height: 1.4;
+        }
+
+        /* Preview */
+        .preview-container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            border-left: 1px solid var(--border);
+        }
+
+        .preview-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 12px;
+            background-color: var(--bg-light);
+            border-bottom: 1px solid var(--border);
+        }
+
+        .preview-content {
+            flex: 1;
+            overflow: auto;
+            background-color: white;
+        }
+
+        #preview {
+            width: 100%;
+            height: 100%;
+            border: none;
+        }
+
+        /* Console */
+        .console-container {
+            height: 120px;
+            border-top: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .console-header {
+            padding: 6px 12px;
+            background-color: var(--bg-light);
+            border-bottom: 1px solid var(--border);
+            font-size: 0.9rem;
+            font-weight: 500;
+        }
+
+        .console-content {
+            flex: 1;
+            padding: 8px 12px;
+            background-color: #1a1a1a;
+            color: #00ff00;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            overflow-y: auto;
+        }
+
+        /* Bottom Bar */
+        .bottom-bar {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background-color: var(--bg-light);
+            display: flex;
+            justify-content: space-around;
+            padding: 10px 0;
+            border-top: 1px solid var(--border);
+            z-index: 100;
+        }
+
+        .btn {
+            flex: 1;
+            margin: 0 5px;
+            padding: 12px;
+            background: linear-gradient(90deg, var(--primary), var(--secondary));
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-weight: 600;
+            cursor: pointer;
+            box-shadow: 0 0 10px rgba(0, 255, 255, 0.3);
+            transition: all 0.3s;
+            font-size: 0.9rem;
+        }
+
+        .btn:hover {
+            box-shadow: 0 0 20px rgba(255, 0, 255, 0.5);
+        }
+
+        .btn-secondary {
+            background: var(--bg-dark);
+            box-shadow: 0 0 5px rgba(255, 255, 255, 0.1);
+        }
+
+        /* Home Page */
+        .home-container {
+            padding: 20px;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .home-title {
+            text-align: center;
+            margin-bottom: 20px;
+            font-size: 1.8rem;
+            background: linear-gradient(90deg, var(--primary), var(--secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .project-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+
+        .project-card {
+            padding: 16px;
+            background-color: var(--bg-light);
+            border-radius: 8px;
+            border: 1px solid var(--border);
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .project-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+        }
+
+        .project-name {
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+
+        .project-date {
+            font-size: 0.8rem;
+            color: var(--text-light);
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 40px 20px;
+            color: var(--text-light);
+        }
+
+        /* Modal */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(0, 0, 0, 0.7);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            padding: 20px;
+        }
+
+        .modal {
+            background-color: var(--bg-light);
+            border-radius: 8px;
+            width: 100%;
+            max-width: 400px;
+            overflow: hidden;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+        }
+
+        .modal-header {
+            padding: 16px;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .modal-title {
+            font-weight: 600;
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 1.2rem;
+            cursor: pointer;
+            color: var(--text-light);
+        }
+
+        .modal-body {
+            padding: 16px;
+        }
+
+        .modal-footer {
+            padding: 12px 16px;
+            border-top: 1px solid var(--border);
+            display: flex;
+            justify-content: flex-end;
+            gap: 8px;
+        }
+
+        .form-group {
+            margin-bottom: 16px;
+        }
+
+        .form-label {
+            display: block;
+            margin-bottom: 6px;
+            font-weight: 500;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            background-color: var(--bg-dark);
+            color: var(--text);
+            font-size: 1rem;
+        }
+
+        /* Utility */
+        .hidden {
+            display: none !important;
+        }
+
+        .text-center {
+            text-align: center;
+        }
+
+        .mt-2 {
+            margin-top: 16px;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .editor-panes {
+                flex-direction: column;
+            }
+            
+            .editor-pane {
+                min-height: 200px;
+            }
+            
+            .preview-container {
+                border-left: none;
+                border-top: 1px solid var(--border);
+            }
+            
+            .btn {
+                padding: 12px 8px;
+                font-size: 0.85rem;
+            }
+            
+            .home-title {
+                font-size: 1.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Home Page -->
+    <div id="home-page" class="container">
+        <div class="header">
+            <div class="logo">Stroven CODE</div>
+            <div class="header-actions">
+                <button class="btn btn-secondary" id="theme-toggle">🌗</button>
+            </div>
+        </div>
+        
+        <div class="home-container">
+            <h1 class="home-title">Stroven CODE</h1>
+            <p class="text-center">Your offline front-end code editor</p>
+            
+            <div class="mt-2">
+                <button class="btn" id="new-project-btn">➕ New Project</button>
+                <button class="btn btn-secondary" id="import-html-btn">📁 Import HTML</button>
+            </div>
+            
+            <div class="project-list mt-2" id="project-list">
+                <!-- Projects will be loaded here -->
+            </div>
+            
+            <div id="empty-state" class="empty-state hidden">
+                <p>No projects yet. Create your first project to get started!</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Editor Page -->
+    <div id="editor-page" class="container hidden">
+        <div class="header">
+            <div class="header-actions">
+                <button class="btn btn-secondary" id="back-btn">⬅ Back</button>
+            </div>
+            <div class="logo" id="project-title">Untitled Project</div>
+            <div class="header-actions">
+                <button class="btn btn-secondary" id="editor-theme-toggle">🌗</button>
+            </div>
+        </div>
+        
+        <div class="editor-container">
+            <div class="editor-tabs">
+                <button class="editor-tab active" data-tab="html">HTML</button>
+                <button class="editor-tab" data-tab="css">CSS</button>
+                <button class="editor-tab" data-tab="js">JavaScript</button>
+                <button class="editor-tab" data-tab="preview">Preview</button>
+            </div>
+            
+            <div class="editor-panes">
+                <!-- HTML Editor -->
+                <div class="editor-pane" id="html-pane">
+                    <div class="editor-header">
+                        <span>HTML</span>
+                    </div>
+                    <div class="editor-content">
+                        <textarea id="html-editor" class="code-editor" placeholder="Write your HTML here..."></textarea>
+                    </div>
+                </div>
+                
+                <!-- CSS Editor -->
+                <div class="editor-pane hidden" id="css-pane">
+                    <div class="editor-header">
+                        <span>CSS</span>
+                    </div>
+                    <div class="editor-content">
+                        <textarea id="css-editor" class="code-editor" placeholder="Write your CSS here..."></textarea>
+                    </div>
+                </div>
+                
+                <!-- JavaScript Editor -->
+                <div class="editor-pane hidden" id="js-pane">
+                    <div class="editor-header">
+                        <span>JavaScript</span>
+                    </div>
+                    <div class="editor-content">
+                        <textarea id="js-editor" class="code-editor" placeholder="Write your JavaScript here..."></textarea>
+                    </div>
+                </div>
+                
+                <!-- Preview -->
+                <div class="preview-container hidden" id="preview-pane">
+                    <div class="preview-header">
+                        <span>Preview</span>
+                    </div>
+                    <div class="preview-content">
+                        <iframe id="preview" sandbox="allow-scripts"></iframe>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Console -->
+            <div class="console-container">
+                <div class="console-header">Console</div>
+                <div class="console-content" id="console-output"></div>
+            </div>
+        </div>
+        
+        <!-- Bottom Bar -->
+        <div class="bottom-bar">
+            <button class="btn" id="run-btn">▶ Run Code</button>
+            <button class="btn btn-secondary" id="save-btn">💾 Save</button>
+            <button class="btn btn-secondary" id="export-btn">📥 Export HTML</button>
+        </div>
+    </div>
+
+    <!-- New Project Modal -->
+    <div id="new-project-modal" class="modal-overlay hidden">
+        <div class="modal">
+            <div class="modal-header">
+                <h3 class="modal-title">Create New Project</h3>
+                <button class="modal-close" id="close-new-project-modal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label for="project-name" class="form-label">Project Name</label>
+                    <input type="text" id="project-name" class="form-input" placeholder="Enter project name">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" id="cancel-new-project">Cancel</button>
+                <button class="btn" id="create-project">Create</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Import HTML Input (hidden) -->
+    <input type="file" id="import-html-input" accept=".html" class="hidden">
+
+    <script>
+        // ===== APP STATE =====
+        let currentProject = null;
+        let autosaveInterval = null;
+        const consoleLogs = [];
+
+        // ===== INITIALIZATION =====
+        document.addEventListener('DOMContentLoaded', function() {
+            // Initialize app
+            initApp();
+            
+            // Set up event listeners
+            setupEventListeners();
+            
+            // Show home page by default
+            showPage('home-page');
+        });
+
+        // ===== APP INITIALIZATION =====
+        function initApp() {
+            // Initialize storage if needed
+            if (!localStorage.getItem('stroven_projects')) {
+                localStorage.setItem('stroven_projects', JSON.stringify([]));
+            }
+            
+            if (!localStorage.getItem('stroven_settings')) {
+                const defaultSettings = {
+                    theme: 'dark',
+                    autosave: true,
+                    autosaveInterval: 10000
+                };
+                localStorage.setItem('stroven_settings', JSON.stringify(defaultSettings));
+            }
+            
+            // Apply saved settings
+            applySettings();
+            
+            // Load projects on home page
+            loadProjects();
+            
+            // Override console.log to capture output
+            overrideConsole();
+            
+            // Load autosaved content if any
+            loadAutoSavedContent();
+        }
+
+        function applySettings() {
+            const settings = getSettings();
+            
+            // Apply theme
+            document.documentElement.setAttribute('data-theme', settings.theme);
+        }
+
+        function overrideConsole() {
+            const originalLog = console.log;
+            const consoleOutput = document.getElementById('console-output');
+            
+            console.log = function(...args) {
+                // Call original console.log
+                originalLog.apply(console, args);
+                
+                // Capture logs for our console
+                const message = args.map(arg => 
+                    typeof arg === 'object' ? JSON.stringify(arg) : String(arg)
+                ).join(' ');
+                
+                consoleLogs.push(message);
+                if (consoleOutput) {
+                    consoleOutput.innerHTML += `<div>${message}</div>`;
+                    consoleOutput.scrollTop = consoleOutput.scrollHeight;
+                }
+            };
+        }
+
+        function loadAutoSavedContent() {
+            const html = localStorage.getItem('stroven_html');
+            const css = localStorage.getItem('stroven_css');
+            const js = localStorage.getItem('stroven_js');
+            
+            if (html) document.getElementById('html-editor').value = html;
+            if (css) document.getElementById('css-editor').value = css;
+            if (js) document.getElementById('js-editor').value = js;
+        }
+
+        function setupAutoSave() {
+            const settings = getSettings();
+            if (!settings.autosave) return;
+            
+            // Clear existing interval
+            if (autosaveInterval) {
+                clearInterval(autosaveInterval);
+            }
+            
+            // Set up new interval
+            autosaveInterval = setInterval(() => {
+                localStorage.setItem('stroven_html', document.getElementById('html-editor').value);
+                localStorage.setItem('stroven_css', document.getElementById('css-editor').value);
+                localStorage.setItem('stroven_js', document.getElementById('js-editor').value);
+                console.log('Auto-saved content');
+            }, settings.autosaveInterval || 3000);
+        }
+
+        // ===== EVENT LISTENERS =====
+        function setupEventListeners() {
+            // Navigation
+            document.getElementById('new-project-btn').addEventListener('click', showNewProjectModal);
+            document.getElementById('back-btn').addEventListener('click', goBack);
+            document.getElementById('theme-toggle').addEventListener('click', toggleTheme);
+            document.getElementById('editor-theme-toggle').addEventListener('click', toggleTheme);
+            
+            // Project actions
+            document.getElementById('create-project').addEventListener('click', createProject);
+            document.getElementById('cancel-new-project').addEventListener('click', hideNewProjectModal);
+            document.getElementById('close-new-project-modal').addEventListener('click', hideNewProjectModal);
+            
+            // Import/Export
+            document.getElementById('import-html-btn').addEventListener('click', () => {
+                document.getElementById('import-html-input').click();
+            });
+            document.getElementById('import-html-input').addEventListener('change', importHTMLFile);
+            document.getElementById('export-btn').addEventListener('click', exportProject);
+            
+            // Editor actions
+            document.getElementById('run-btn').addEventListener('click', runCode);
+            document.getElementById('save-btn').addEventListener('click', saveCurrentProject);
+            
+            // Tab switching
+            document.querySelectorAll('.editor-tab').forEach(tab => {
+                tab.addEventListener('click', function() {
+                    const tabName = this.getAttribute('data-tab');
+                    switchTab(tabName);
+                });
+            });
+            
+            // Modal backdrop clicks
+            document.getElementById('new-project-modal').addEventListener('click', function(e) {
+                if (e.target === this) hideNewProjectModal();
+            });
+        }
+
+        // ===== PAGE NAVIGATION =====
+        function showPage(pageId) {
+            // Hide all pages
+            document.querySelectorAll('.container').forEach(page => {
+                page.classList.add('hidden');
+            });
+            
+            // Show requested page
+            document.getElementById(pageId).classList.remove('hidden');
+            
+            // Special handling for specific pages
+            if (pageId === 'home-page') {
+                loadProjects();
+            } else if (pageId === 'editor-page') {
+                setupAutoSave();
+            }
+        }
+
+        function goBack() {
+            showPage('home-page');
+        }
+
+        // ===== TAB MANAGEMENT =====
+        function switchTab(tabName) {
+            // Update active tab
+            document.querySelectorAll('.editor-tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            document.querySelector(`[data-tab="${tabName}"]`).classList.add('active');
+            
+            // Show corresponding pane
+            document.querySelectorAll('.editor-pane, .preview-container').forEach(pane => {
+                pane.classList.add('hidden');
+            });
+            
+            if (tabName === 'preview') {
+                document.getElementById('preview-pane').classList.remove('hidden');
+                runCode(); // Run code when switching to preview
+            } else {
+                document.getElementById(`${tabName}-pane`).classList.remove('hidden');
+            }
+        }
+
+        // ===== PROJECT MANAGEMENT =====
+        function loadProjects() {
+            const projectList = document.getElementById('project-list');
+            const emptyState = document.getElementById('empty-state');
+            
+            // Clear current projects
+            projectList.innerHTML = '';
+            
+            // Get projects from storage
+            const projects = getProjects();
+            
+            if (projects.length === 0) {
+                emptyState.classList.remove('hidden');
+                return;
+            }
+            
+            emptyState.classList.add('hidden');
+            
+            // Create project cards
+            projects.forEach(project => {
+                const projectCard = document.createElement('div');
+                projectCard.className = 'project-card';
+                
+                projectCard.innerHTML = `
+                    <div class="project-name">${project.name}</div>
+                    <div class="project-date">${formatDate(project.updatedAt)}</div>
+                `;
+                
+                projectCard.addEventListener('click', () => {
+                    openProject(project.name);
+                });
+                
+                projectList.appendChild(projectCard);
+            });
+        }
+
+        function showNewProjectModal() {
+            document.getElementById('new-project-modal').classList.remove('hidden');
+            document.getElementById('project-name').value = '';
+            document.getElementById('project-name').focus();
+        }
+
+        function hideNewProjectModal() {
+            document.getElementById('new-project-modal').classList.add('hidden');
+        }
+
+        function createProject() {
+            const projectName = document.getElementById('project-name').value.trim();
+            
+            if (!projectName) {
+                alert('Please enter a project name');
+                return;
+            }
+            
+            const projects = getProjects();
+            
+            if (projects.some(p => p.name === projectName)) {
+                alert('A project with this name already exists');
+                return;
+            }
+            
+            // Create new project
+            const newProject = {
+                name: projectName,
+                html: '<h1>Hello World!</h1>\n<p>Start coding here...</p>',
+                css: 'body {\n  font-family: Arial, sans-serif;\n  padding: 20px;\n}',
+                js: 'console.log("Hello from Stroven CODE!");',
+                updatedAt: Date.now()
+            };
+            
+            projects.push(newProject);
+            localStorage.setItem('stroven_projects', JSON.stringify(projects));
+            
+            // Hide modal and open the new project
+            hideNewProjectModal();
+            openProject(projectName);
+        }
+
+        function openProject(projectName) {
+            const projects = getProjects();
+            const project = projects.find(p => p.name === projectName);
+            
+            if (!project) {
+                alert('Project not found');
+                return;
+            }
+            
+            currentProject = projectName;
+            
+            // Set editor values
+            document.getElementById('html-editor').value = project.html || '';
+            document.getElementById('css-editor').value = project.css || '';
+            document.getElementById('js-editor').value = project.js || '';
+            
+            // Update project title
+            document.getElementById('project-title').textContent = projectName;
+            
+            // Show editor page
+            showPage('editor-page');
+            
+            // Clear console
+            document.getElementById('console-output').innerHTML = '';
+            consoleLogs.length = 0;
+            
+            // Run code to show initial preview
+            runCode();
+        }
+
+        function saveCurrentProject() {
+            if (!currentProject) return;
+            
+            const projects = getProjects();
+            const projectIndex = projects.findIndex(p => p.name === currentProject);
+            
+            if (projectIndex === -1) return;
+            
+            // Update project data
+            projects[projectIndex].html = document.getElementById('html-editor').value;
+            projects[projectIndex].css = document.getElementById('css-editor').value;
+            projects[projectIndex].js = document.getElementById('js-editor').value;
+            projects[projectIndex].updatedAt = Date.now();
+            
+            // Save to storage
+            localStorage.setItem('stroven_projects', JSON.stringify(projects));
+            
+            // Show save confirmation
+            console.log('Project saved successfully');
+        }
+
+        // ===== CODE EXECUTION =====
+        function runCode() {
+            const html = document.getElementById('html-editor').value;
+            const css = document.getElementById('css-editor').value;
+            const js = document.getElementById('js-editor').value;
+            
+            // FIXED: Complete HTML structure with proper escaping
+            const fullCode = `<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <style>${css}</style>
+</head>
+<body>
+    ${html}
+    <script>${js}<\/script>
+</body>
+</html>`;
+            
+            const iframe = document.getElementById('preview');
+            iframe.srcdoc = fullCode;
+        }
+
+        // ===== IMPORT/EXPORT =====
+        function importHTMLFile(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const content = e.target.result;
+                
+                // Extract HTML, CSS, and JS from the file
+                const htmlMatch = content.match(/<body[^>]*>([\s\S]*)<\/body>/i);
+                const htmlPart = htmlMatch ? htmlMatch[1] : content;
+                
+                const cssMatch = content.match(/<style[^>]*>([\s\S]*)<\/style>/i);
+                const cssPart = cssMatch ? cssMatch[1] : '';
+                
+                const jsMatch = content.match(/<script[^>]*>([\s\S]*)<\/script>/i);
+                const jsPart = jsMatch ? jsMatch[1] : '';
+                
+                // Create a new project with the imported content
+                const projectName = `Imported_${Date.now()}`;
+                const projects = getProjects();
+                
+                projects.push({
+                    name: projectName,
+                    html: htmlPart,
+                    css: cssPart,
+                    js: jsPart,
+                    updatedAt: Date.now()
+                });
+                
+                localStorage.setItem('stroven_projects', JSON.stringify(projects));
+                
+                // Open the imported project
+                openProject(projectName);
+                
+                // Reset file input
+                event.target.value = '';
+            };
+            
+            reader.readAsText(file);
+        }
+
+        function exportProject() {
+            if (!currentProject) {
+                alert('No project loaded');
+                return;
+            }
+            
+            const html = document.getElementById('html-editor').value;
+            const css = document.getElementById('css-editor').value;
+            const js = document.getElementById('js-editor').value;
+            
+            // FIXED: Proper HTML export with correct MIME type
+            const fullCode = `<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>${currentProject}</title>
+    <style>${css}</style>
+</head>
+<body>
+    ${html}
+    <script>${js}<\/script>
+</body>
+</html>`;
+            
+            const blob = new Blob([fullCode], {type: 'text/html'});
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = `${currentProject}.html`;
+            link.click();
+        }
+
+        // ===== THEME MANAGEMENT =====
+        function toggleTheme() {
+            const currentTheme = document.documentElement.getAttribute('data-theme');
+            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+            
+            document.documentElement.setAttribute('data-theme', newTheme);
+            
+            // Update settings
+            const settings = getSettings();
+            settings.theme = newTheme;
+            localStorage.setItem('stroven_settings', JSON.stringify(settings));
+        }
+
+        // ===== UTILITY FUNCTIONS =====
+        function getProjects() {
+            return JSON.parse(localStorage.getItem('stroven_projects') || '[]');
+        }
+
+        function getSettings() {
+            return JSON.parse(localStorage.getItem('stroven_settings') || '{}');
+        }
+
+        function formatDate(timestamp) {
+            const date = new Date(timestamp);
+            return date.toLocaleDateString() + ' ' + date.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+        }
+    </script>
+</body>
+</html>
